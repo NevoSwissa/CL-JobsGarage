@@ -1,8 +1,8 @@
-# CL-JobGarage
+# CL-JobsGarage
 
 (This is an extanded version of CL-PoliceGarageV2)
 
-**CL-JobGarage** is a FiveM script that allows players to create an infinite amount of garages. These garages can be used to purchase, rent, and store vehicles, as well as change liveries and vehicle extras. The script uses a database table with a complete garage system and supports multiple jobs.
+**CL-JobsGarage** is a FiveM script that allows players to create an infinite amount of garages. These garages can be used to purchase, rent, and store vehicles, as well as change liveries and vehicle extras. The script uses a database table with a complete garage system and supports multiple jobs.
 
 # Features
 
@@ -32,7 +32,7 @@ You can configure the script using the `config.lua` file. The available options 
 
 # Usage
 
-To use CL-JobGarage, simply install the script and start it. Players can then interact with the stations/garages you have configured to purchase, rent, and store vehicles.
+To use CL-JobsGarage, simply install the script and start it. Players can then interact with the stations/garages you have configured to purchase, rent, and store vehicles.
 
 # Contributing
 
@@ -40,7 +40,7 @@ Contributions are always welcome! If you find any issues or want to add new feat
 
 # Credits
 
-CL-JobGarage was developed by CloudDevelopment. Special thanks to the FiveM community as a whole and QBCore in particular for their contributions and support.
+CL-JobsGarage was developed by CloudDevelopment. Special thanks to the FiveM community as a whole and QBCore in particular for their contributions and support.
 
 # License
 
