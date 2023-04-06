@@ -44,4 +44,4 @@ CL-JobsGarage was developed by CloudDevelopment. Special thanks to the FiveM com
 
 # License
 
-This script is released under the MIT License.
+This script is released under the GNU General Public License.
