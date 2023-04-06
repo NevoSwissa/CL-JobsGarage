@@ -4,7 +4,8 @@
 
 **CL-JobGarage** is a FiveM script that allows players to create an infinite amount of garages. These garages can be used to purchase, rent, and store vehicles, as well as change liveries and vehicle extras. The script uses a database table with a complete garage system and supports multiple jobs.
 
-#Features
+# Features
+
 - Purchase, rent, and store vehicles
 - Change liveries and vehicle extras
 - Complete garage system using a database table
@@ -12,7 +13,7 @@
 - Dynamic blips
 - Highly configurable
 
-#Configuration
+# Configuration
 
 You can configure the script using the `config.lua` file. The available options include:
 
@@ -29,18 +30,18 @@ You can configure the script using the `config.lua` file. The available options 
 - `Locals`: Contains various notification messages that the script uses. You can edit these messages to suit your needs.
 - `Locations`: Contains information about the stations/garages available in the game. You can configure each station/garage's features and requirements here.
 
-#Usage
+# Usage
 
 To use CL-JobGarage, simply install the script and start it. Players can then interact with the stations/garages you have configured to purchase, rent, and store vehicles.
 
-#Contributing
+# Contributing
 
 Contributions are always welcome! If you find any issues or want to add new features, feel free to fork this repository and submit a pull request.
 
-#Credits
+# Credits
 
 CL-JobGarage was developed by CloudDevelopment. Special thanks to the FiveM community as a whole and QBCore in particular for their contributions and support.
 
-#License
+# License
 
 This script is released under the MIT License.
