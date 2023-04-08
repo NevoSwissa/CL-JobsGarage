@@ -50,10 +50,6 @@ local function ShowHelpNotification(text)
     DisplayHelpTextFromStringLabel(0, 0, 1, -1)
 end
 
-function round(num, numDecimalPlaces)
-    return tonumber(string.format("%." .. (numDecimalPlaces or 0) .. "f", num))
-end
-
 function FormatString(str)
     local code = ""
     for word in str:gmatch("%S+") do
@@ -381,7 +377,7 @@ RegisterNetEvent('CL-PoliceGarageV2:OpenVehiclesMenu', function(data)
         if not v.locate then
             table.insert(VehiclesMenu, {
                 header = vehicleName .. " ┇ " .. v.vehicleinfo['plate'],
-                txt = "Fuel : " .. (v.vehicleinfo['fuel'] and math.floor(v.vehicleinfo['fuel']) or "N/A") .. "<br> Body : " .. (v.vehicleinfo['body'] and round(v.vehicleinfo['body'] / 10, 0) or "N/A") .. "%<br> Engine : " .. (v.vehicleinfo['engine'] and round(v.vehicleinfo['engine'] / 10, 0) or "N/A") .. "%",
+                txt = "Fuel : " .. (v.vehicleinfo['fuel'] and math.floor(v.vehicleinfo['fuel']) or "N/A") .. "<br> Body : " .. (v.vehicleinfo['body'] and QBCore.Shared.Round(v.vehicleinfo['body'] / 10, 0) or "N/A") .. "%<br> Engine : " .. (v.vehicleinfo['engine'] and QBCore.Shared.Round(v.vehicleinfo['engine'] / 10, 0) or "N/A") .. "%",
                 icon = "fa-solid fa-car",
                 params = {
                     event = "CL-PoliceGarageV2:TakeVehicle",
@@ -896,13 +892,15 @@ RegisterNetEvent('CL-PoliceGarageV2:TakeVehicle', function(data)
         QBCore.Functions.TriggerCallback('CL-PoliceGarageV2:SpawnVehicle', function(result)
             if result then
                 local veh = NetToVeh(result.net)
+                SetVehicleNumberPlateText(veh, data.vehicleinfo['plate'])
+                local plate = QBCore.Functions.GetPlate(veh)
                 ApplyVehicleDamage(veh, data.vehicleinfo['engine'], data.vehicleinfo['body'])
-                TriggerEvent("vehiclekeys:client:SetOwner", result.plate)
-                if data.trunkitems then TriggerServerEvent("inventory:server:addTrunkItems", result.plate, SetTrunkItemsInfo(data.trunkitems)) end
+                TriggerEvent("vehiclekeys:client:SetOwner", plate)
+                if data.trunkitems ~= nil then TriggerServerEvent("inventory:server:addTrunkItems", plate, SetTrunkItemsInfo(data.trunkitems)) end
                 QBCore.Functions.SetVehicleProperties(veh, result.mods)
                 exports[Config.FuelSystem]:SetFuel(veh, data.vehicleinfo['fuel'])
                 SetVehicleEngineOn(veh, true, true)
-                QBCore.Functions.Notify('Taking out ' .. data.vehiclename, 'success')
+                QBCore.Functions.Notify(Config.Locals['Notifications']['TakeOut'] .. data.vehiclename, 'success')
             end
         end, data)
     else

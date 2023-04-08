@@ -53,6 +53,7 @@ Config.Locals = {
         SuccessfullyStored = "You have successfully stored your vehicle at ",
         VehicleFixed = "Your vehicle successfully got fixed",
         ErrorStoring = "Error occured while storing vehicle",
+        TakeOut = "Taking out ",
         NoVehicles = "No vehicles were found at ",
         ExtraTurnedOff = " vehicle extra successfully got turned off",
         NoJob = " doesnt have the correct job",

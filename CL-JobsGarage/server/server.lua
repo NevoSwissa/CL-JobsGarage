@@ -285,13 +285,12 @@ QBCore.Functions.CreateCallback('CL-PoliceGarageV2:SpawnVehicle', function(sourc
             if Player.Functions.RemoveMoney("cash", fine) then
                 local veh = QBCore.Functions.SpawnVehicle(source, data.vehicle, data.coordsinfo['VehicleSpawn'], true)
                 SetEntityHeading(veh, data.coordsinfo['VehicleSpawn'].w)
-                local vPlate = SetVehicleNumberPlateText(veh, plate)
                 local vehProps = {}
                 local result = MySQL.query.await('SELECT mods FROM cl_jobsgarage WHERE vehicleinfo LIKE @plate', {["@plate"] = "%" .. plate .. "%"})
                 if result[1] then vehProps = json.decode(result[1].mods) end
                 local netId = NetworkGetNetworkIdFromEntity(veh)
                 MySQL.Async.execute('UPDATE cl_jobsgarage SET status = @status WHERE vehicleinfo LIKE @plate', {["@status"] = 0, ["@plate"] = "%" .. plate .. "%"})
-                cb({net = netId, plate = vPlate, mods = vehProps})
+                cb({net = netId, mods = vehProps})
             else
                 TriggerClientEvent('QBCore:Notify', source, Config.Locals['Notifications']['NoMoney'], "error")
             end
@@ -299,13 +298,12 @@ QBCore.Functions.CreateCallback('CL-PoliceGarageV2:SpawnVehicle', function(sourc
     else
         local veh = QBCore.Functions.SpawnVehicle(source, data.vehicle, data.coordsinfo['VehicleSpawn'], true)
         SetEntityHeading(veh, data.coordsinfo['VehicleSpawn'].w)
-        local vPlate = SetVehicleNumberPlateText(veh, plate)
         local vehProps = {}
         local result = MySQL.query.await('SELECT mods FROM cl_jobsgarage WHERE vehicleinfo LIKE @plate', {["@plate"] = "%" .. plate .. "%"})
         if result[1] then vehProps = json.decode(result[1].mods) end
         local netId = NetworkGetNetworkIdFromEntity(veh)
         MySQL.Async.execute('UPDATE cl_jobsgarage SET status = @status WHERE vehicleinfo LIKE @plate', {["@status"] = 0, ["@plate"] = "%" .. plate .. "%"})
-        cb({net = netId, plate = vPlate, mods = vehProps})
+        cb({net = netId, mods = vehProps})
     end
 end)
 
