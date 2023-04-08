@@ -4,11 +4,14 @@
 
 **CL-JobsGarage** is a FiveM script that allows players to create an infinite amount of garages. These garages can be used to purchase, rent, and store vehicles, as well as change liveries and vehicle extras. The script uses a database table with a complete garage system and supports multiple jobs.
 
+Preview : https://youtu.be/CHKa71cnI_g
+
 # Features
 
 - Purchase, rent, and store vehicles
 - Change liveries and vehicle extras
 - Complete garage system using a database table
+- Use of compnay funds for buying vehicles
 - Multiple job support
 - Dynamic blips
 - Highly configurable
