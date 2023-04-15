@@ -10,10 +10,17 @@ shared_scripts {
 }
 
 client_scripts {
+    '@PolyZone/client.lua',
     'client/client.lua',
 }
 
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
     'server/server.lua',
+}
+
+dependencies {
+    'PolyZone',
+    'qb-target',
+    'oxmysql',
 }

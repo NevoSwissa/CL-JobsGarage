@@ -1,20 +1,31 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
-function HasJob(job, player)
-    local src = player or source
+function HasPermission(job, gang)
+    local src = source
     local Player = QBCore.Functions.GetPlayer(src)
+    local hasJob = false
+    local hasGang = false
     if type(job) == "table" then
         for _, j in ipairs(job) do
             if Player.PlayerData.job.name == j then
-                return true
+                hasJob = true
+                break
             end
         end
-    elseif job == "all" then
-        return true
-    elseif Player.PlayerData.job.name == job then
-        return true
+    elseif job == "all" or Player.PlayerData.job.name == job then
+        hasJob = true
     end
-    return false
+    if type(gang) == "table" then
+        for _, g in ipairs(gang) do
+            if Player.PlayerData.gang.name == g then
+                hasGang = true
+                break
+            end
+        end
+    elseif gang == "all" or Player.PlayerData.gang.name == gang then
+        hasGang = true
+    end
+    return hasJob or hasGang
 end
 
 function IsVehicleAllowed(sellList, vehicle)
@@ -72,8 +83,9 @@ AddEventHandler('onResourceStart', function(resource)
     if resource == GetCurrentResourceName() then
         Wait(100)
         if Config.AutoRespawn then 
-            MySQL.update('UPDATE cl_jobsgarage SET status = 1 WHERE status = 0', {}) 
+            MySQL.Async.execute('UPDATE cl_jobsgarage SET status = 1 WHERE status IN (0, 3)', {})
         else 
+            MySQL.Async.execute('UPDATE cl_jobsgarage SET status = 1 WHERE status = 3', {})
             CheckForMissingVehicles()
         end
     end
@@ -81,8 +93,9 @@ end)
 
 AddEventHandler("playerConnecting", function()
     if Config.AutoRespawn then 
-        MySQL.update('UPDATE cl_jobsgarage SET status = 1 WHERE status = 0', {}) 
+        MySQL.Async.execute('UPDATE cl_jobsgarage SET status = 1 WHERE status IN (0, 3)', {})
     else 
+        MySQL.Async.execute('UPDATE cl_jobsgarage SET status = 1 WHERE status = 3', {})
         CheckForMissingVehicles()
     end
 end)
@@ -90,7 +103,7 @@ end)
 RegisterServerEvent("CL-PoliceGarageV2:GetData", function(data)
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
-    if data.rjob ~= "all" and Config.BanWhenExploit and not HasJob(data.rjob) then ExploitBan(src, 'Banned for exploiting') end
+    if Config.BanWhenExploit and not HasPermission(data.rjob, data.rgang) then ExploitBan(src, 'Banned for exploiting') end
     if data.type == "availablevehicles" or data.type == "vehicledepot" then
         CheckForMissingVehicles()
         MySQL.Async.fetchAll("SELECT * FROM cl_jobsgarage WHERE citizenid = @citizenid AND station = @station", { ['@citizenid'] = Player.PlayerData.citizenid, ['@station'] = data.station }, function(result)
@@ -106,7 +119,18 @@ RegisterServerEvent("CL-PoliceGarageV2:GetData", function(data)
                             mods = result[i].mods,
                             status = result[i].status,
                             trunkitems = GetVehicleTrunkItems(data.selllist, result[i].vehicle),
-                            vehicleinfo = vehicleinfo
+                            vehicleinfo = vehicleinfo,
+                        })
+                    elseif result[i].status == 3 and IsVehicleAllowed(data.selllist, result[i].vehicle) then
+                        anyVehicles = true
+                        table.insert(vehicles, {
+                            vehicle = result[i].vehicle,
+                            mods = result[i].mods,
+                            status = result[i].status,
+                            trunkitems = GetVehicleTrunkItems(data.selllist, result[i].vehicle),
+                            vehicleinfo = vehicleinfo,
+                            id = result[i].id,
+                            showcar = true,
                         })
                     end
                 elseif result[i].status == 2 and IsVehicleAllowed(data.selllist, result[i].vehicle) then
@@ -129,12 +153,13 @@ RegisterServerEvent("CL-PoliceGarageV2:GetData", function(data)
                 end
             end
             if not anyVehicles then
-                TriggerClientEvent('QBCore:Notify', src, Config.Locals["Notifications"]["NoVehicles"] .. data.station, "error")
+                TriggerClientEvent('QBCore:Notify', src, Config.Locals["Notifications"]['GarageNotifications']["NoVehicles"] .. data.station, "error")
                 return
             end
             local depot = data.type == "vehicledepot" and "vehicledepot" or nil
             local data = {
                 job = data.rjob,
+                gang = data.rgang,
                 coordsinfo = data.coordsinfo,
                 station = data.station,
                 purchasablevehicles = data.selllist,
@@ -148,13 +173,12 @@ RegisterServerEvent("CL-PoliceGarageV2:GetData", function(data)
     end
 end)
 
-RegisterServerEvent("CL-PoliceGarageV2:AddData", function(type, vehicle, plate, job, station, body, engine, fuel, mods, hash, selllist)
+RegisterServerEvent("CL-PoliceGarageV2:AddData", function(type, vehicle, plate, job, gang, station, body, engine, fuel, mods, selllist, status)
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
-    if job ~= "all" and Config.BanWhenExploit and not HasJob(job) then ExploitBan(src, 'Banned for exploiting') end
+    if Config.BanWhenExploit and not HasPermission(job, gang) then ExploitBan(src, 'Banned for exploiting') end
     if type == "vehiclepurchased" then
         local data = {
-            hash = GetHashKey(vehicle),
             plate = plate,
             engine = body,
             body = engine,
@@ -182,28 +206,27 @@ RegisterServerEvent("CL-PoliceGarageV2:AddData", function(type, vehicle, plate, 
                             body = body,
                             fuel = fuel,
                             plate = plate,
-                            hash = hash,
                         })
                         local modsJson = json.encode(mods)
                         MySQL.Async.execute("UPDATE cl_jobsgarage SET vehicleinfo = @vehicleinfo, mods = @mods, status = @status WHERE id = @id", {
                             ['@vehicleinfo'] = vehicleinfo,
                             ['@mods'] = modsJson,
-                            ['@status'] = 1,
+                            ['@status'] = status,
                             ['@id'] = id
                         }, function(rowsChanged)
                             if rowsChanged > 0 then
-                                TriggerClientEvent('QBCore:Notify', src, Config.Locals["Notifications"]["SuccessfullyStored"] .. station, 'success')
+                                TriggerClientEvent('QBCore:Notify', src, Config.Locals["Notifications"]['GarageNotifications']["SuccessfullyStored"] .. station, 'success')
                             else
-                                TriggerClientEvent('QBCore:Notify', src, Config.Locals["Notifications"]["ErrorStoring"], 'error')
+                                TriggerClientEvent('QBCore:Notify', src, Config.Locals["Notifications"]['GarageNotifications']["ErrorStoring"], 'error')
                             end
                         end)
                     else
-                        TriggerClientEvent('QBCore:Notify', src, Config.Locals["Notifications"]["ErrorStoring"], 'error')
+                        TriggerClientEvent('QBCore:Notify', src, Config.Locals["Notifications"]['GarageNotifications']["ErrorStoring"], 'error')
                         return
                     end
                 end
             else
-                TriggerClientEvent('QBCore:Notify', src, Config.Locals["Notifications"]["ErrorStoring"], 'error')
+                TriggerClientEvent('QBCore:Notify', src, Config.Locals["Notifications"]['GarageNotifications']["ErrorStoring"], 'error')
             end
         end)
     else
@@ -211,24 +234,24 @@ RegisterServerEvent("CL-PoliceGarageV2:AddData", function(type, vehicle, plate, 
     end
 end)
 
-RegisterServerEvent('CL-PoliceGarageV2:RentVehicle', function(paymenttype, finalPrice, vehiclename, vehicle, time, coordsinfo, job, station)
+RegisterServerEvent('CL-PoliceGarageV2:RentVehicle', function(paymenttype, finalPrice, vehiclename, vehicle, time, coordsinfo, job, gang, station)
 	local src = source
 	local Player = QBCore.Functions.GetPlayer(src)
-    if job ~= "all" and Config.BanWhenExploit and not HasJob(job) then ExploitBan(src, 'Banned for exploiting') end
+    if Config.BanWhenExploit and not HasPermission(job, gang) then ExploitBan(src, 'Banned for exploiting') end
     if Player.Functions.GetMoney(paymenttype) >= finalPrice then
-        TriggerClientEvent("CL-PoliceGarageV2:SpawnRentedVehicle", src, vehicle, vehiclename, finalPrice, time, os.time(), coordsinfo['VehicleSpawn'], paymenttype, job, station)  
+        TriggerClientEvent("CL-PoliceGarageV2:SpawnRentedVehicle", src, vehicle, vehiclename, finalPrice, time, os.time(), coordsinfo['VehicleSpawn'], paymenttype, job, gang, station)  
         Player.Functions.RemoveMoney(paymenttype, finalPrice)
-        TriggerClientEvent('QBCore:Notify', src, vehiclename .. Config.Locals["Notifications"]["SuccessfullyRented"] .. time .. " minutes", "success")  
+        TriggerClientEvent('QBCore:Notify', src, vehiclename .. Config.Locals["Notifications"]['RentNotifications']["SuccessfullyRented"] .. time .. " minutes", "success")  
         if Config.UseLogs then TriggerEvent("qb-log:server:CreateLog", "default", GetCurrentResourceName(), "blue", 'New vehicle rented by: **'..GetPlayerName(src)..'** Player ID: **' ..src.. '** Rented: **' ..vehiclename.. '** For: **' ..finalPrice.. '$**'..' Rented for: **'..time .. '** minutes', false) end
     else
-        TriggerClientEvent('QBCore:Notify', src, Config.Locals["Notifications"]["NoMoney"], "error")              
+        TriggerClientEvent('QBCore:Notify', src, Config.Locals["Notifications"]['GeneralNotifications']["NoMoney"], "error")              
     end    
 end)
 
 RegisterServerEvent('CL-PoliceGarageV2:BuyVehicle', function(data)
 	local src = source
 	local Player = QBCore.Functions.GetPlayer(src)
-    if data.job ~= "all" and Config.BanWhenExploit and not HasJob(data.job) then ExploitBan(src, 'Banned for exploiting') end
+    if Config.BanWhenExploit and not HasPermission(data.job, data.gang) then ExploitBan(src, 'Banned for exploiting') end
     if data.paymenttype == "company" and Config.CompanyFunds['Enable'] then
         local Reciever = QBCore.Functions.GetPlayer(data.id)
         if Reciever.PlayerData.job.name == Player.PlayerData.job.name then
@@ -236,34 +259,34 @@ RegisterServerEvent('CL-PoliceGarageV2:BuyVehicle', function(data)
                 local account = exports['qb-management']:GetAccount(Player.PlayerData.job.name)
                 if account >= data.price then
                     exports['qb-management']:RemoveMoney(Player.PlayerData.job.name, data.price)
-                    TriggerClientEvent('QBCore:Notify', data.buyer, "You have successfully purchased " .. data.vehiclename .. " for " .. data.name .. " using the company funds from " .. data.station, "success")  
-                    TriggerClientEvent('QBCore:Notify', data.id, data.vehiclename .. Config.Locals["Notifications"]["SuccessfullyBought"] .. data.station .. " garage", "success")  
-                    TriggerClientEvent("CL-PoliceGarageV2:SpawnPurchasedVehicle", data.id, data.vehicle, data.coordsinfo['VehicleSpawn'], data.coordsinfo['CheckRadius'], data.job, data.useownable, data.trunkitems, data.extras, data.liveries, data.station)
+                    TriggerClientEvent('QBCore:Notify', data.buyer, "You have successfully purchased " .. data.vehiclename .. " for " .. data.name .. " using the company funds from " .. account, "success")  
+                    TriggerClientEvent('QBCore:Notify', data.id, data.vehiclename .. Config.Locals["Notifications"]['GeneralNotifications']["SuccessfullyBought"] .. data.station .. " garage", "success")  
+                    TriggerClientEvent("CL-PoliceGarageV2:SpawnPurchasedVehicle", data.id, data.vehicle, data.vehiclename, data.coordsinfo['VehicleSpawn'], data.coordsinfo['CheckRadius'], data.job, data.gang, data.useownable, data.trunkitems, data.extras, data.liveries, data.colors, data.station)
                 else
-                    TriggerClientEvent('QBCore:Notify', data.buyer, Config.Locals['Notifications']['NoFunds'] .. data.vehiclename .. " money available " .. account, "error")  
+                    TriggerClientEvent('QBCore:Notify', data.buyer, Config.Locals['Notifications']['GeneralNotifications']['NoFunds'] .. data.vehiclename .. " money available " .. account, "error")  
                 end
             else
-                TriggerClientEvent('QBCore:Notify', data.buyer, GetPlayerName(data.id) .. Config.Locals['Notifications']['NoRank'], "error")  
+                TriggerClientEvent('QBCore:Notify', data.buyer, GetPlayerName(data.id) .. Config.Locals['Notifications']['GeneralNotifications']['NoRank'], "error")  
             end
         else
-            TriggerClientEvent('QBCore:Notify', data.buyer, GetPlayerName(data.id) .. Config.Locals['Notifications']['NoJob'], "error")  
+            TriggerClientEvent('QBCore:Notify', data.buyer, GetPlayerName(data.id) .. Config.Locals['Notifications']['GeneralNotifications']['NoJob'], "error")  
         end
     else
         if Player.Functions.GetMoney(data.paymenttype) >= data.price then
-            TriggerClientEvent("CL-PoliceGarageV2:SpawnPurchasedVehicle", src, data.vehicle, data.coordsinfo['VehicleSpawn'], data.coordsinfo['CheckRadius'], data.job, data.useownable, data.trunkitems, data.extras, data.liveries, data.station)  
+            TriggerClientEvent("CL-PoliceGarageV2:SpawnPurchasedVehicle", src, data.vehicle, data.vehiclename, data.coordsinfo['VehicleSpawn'], data.coordsinfo['CheckRadius'], data.job, data.gang, data.useownable, data.trunkitems, data.extras, data.liveries, data.colors, data.station)  
             Player.Functions.RemoveMoney(data.paymenttype, data.price)
-            TriggerClientEvent('QBCore:Notify', src, data.vehiclename .. Config.Locals["Notifications"]["SuccessfullyBought"] .. data.station .. " garage", "success")  
+            TriggerClientEvent('QBCore:Notify', src, data.vehiclename .. Config.Locals["Notifications"]['GeneralNotifications']["SuccessfullyBought"] .. data.station .. " garage", "success")  
             if Config.UseLogs then TriggerEvent("qb-log:server:CreateLog", "default", GetCurrentResourceName(), "blue", 'New vehicle purchased by: **'..GetPlayerName(src)..'** Player ID: **' ..src.. '** Bought: **' ..vehiclename.. '** For: **' ..price.. '$**'..' Station rented at: **'..station..'**', false) end
         else
-            TriggerClientEvent('QBCore:Notify', src, Config.Locals["Notifications"]["NoMoney"], "error")              
+            TriggerClientEvent('QBCore:Notify', src, Config.Locals["Notifications"]['GeneralNotifications']["NoMoney"], "error")              
         end  
     end
 end)
 
-RegisterServerEvent('CL-PoliceGarageV2:RefundRent', function(paymenttype, refund, clientsource, job)
+RegisterServerEvent('CL-PoliceGarageV2:RefundRent', function(paymenttype, refund, clientsource, job, gang)
 	local src = source
 	local Player = QBCore.Functions.GetPlayer(clientsource)
-    if job ~= "all" and Config.BanWhenExploit and not HasJob(job) then ExploitBan(src, 'Banned for exploiting') end
+    if Config.BanWhenExploit and not HasPermission(job, gang) then ExploitBan(src, 'Banned for exploiting') end
     if clientsource == src then
         Player.Functions.AddMoney(paymenttype, refund)
     else
@@ -292,9 +315,18 @@ QBCore.Functions.CreateCallback('CL-PoliceGarageV2:SpawnVehicle', function(sourc
                 MySQL.Async.execute('UPDATE cl_jobsgarage SET status = @status WHERE vehicleinfo LIKE @plate', {["@status"] = 0, ["@plate"] = "%" .. plate .. "%"})
                 cb({net = netId, mods = vehProps})
             else
-                TriggerClientEvent('QBCore:Notify', source, Config.Locals['Notifications']['NoMoney'], "error")
+                TriggerClientEvent('QBCore:Notify', source, Config.Locals['Notifications']['GeneralNotifications']['NoMoney'], "error")
             end
         end
+    elseif data.showcar then
+        local veh = QBCore.Functions.SpawnVehicle(source, data.vehicle, data.coords, true)
+        SetEntityHeading(veh, data.coords.w)
+        local vehProps = {}
+        local result = MySQL.query.await('SELECT mods FROM cl_jobsgarage WHERE vehicleinfo LIKE @plate', {["@plate"] = "%" .. plate .. "%"})
+        if result[1] then vehProps = json.decode(result[1].mods) end
+        local netId = NetworkGetNetworkIdFromEntity(veh)
+        MySQL.Async.execute('UPDATE cl_jobsgarage SET status = @status WHERE vehicleinfo LIKE @plate', {["@status"] = 0, ["@plate"] = "%" .. plate .. "%"})
+        cb({net = netId, mods = vehProps})
     else
         local veh = QBCore.Functions.SpawnVehicle(source, data.vehicle, data.coordsinfo['VehicleSpawn'], true)
         SetEntityHeading(veh, data.coordsinfo['VehicleSpawn'].w)
@@ -305,6 +337,29 @@ QBCore.Functions.CreateCallback('CL-PoliceGarageV2:SpawnVehicle', function(sourc
         MySQL.Async.execute('UPDATE cl_jobsgarage SET status = @status WHERE vehicleinfo LIKE @plate', {["@status"] = 0, ["@plate"] = "%" .. plate .. "%"})
         cb({net = netId, mods = vehProps})
     end
+end)
+
+QBCore.Functions.CreateCallback('CL-PoliceGarageV2:GetVehicle', function(source, cb, plate)
+    local vehProps = {}
+    local result = MySQL.query.await('SELECT mods, vehicle, id FROM cl_jobsgarage WHERE vehicleinfo LIKE @plate', {["@plate"] = "%" .. plate .. "%"})
+    if result[1] then 
+        vehProps = json.decode(result[1].mods)
+    end
+    cb({id = result[1].id, mods = vehProps, vehicle = result[1].vehicle})
+end)
+
+QBCore.Functions.CreateCallback('CL-PoliceGarageV2:GetStatus', function(source, cb, plate)
+    local result = MySQL.Async.fetchAll('SELECT status FROM cl_jobsgarage WHERE status = 3 AND vehicleinfo LIKE @plate', {["@plate"] = "%" .. plate .. "%"})
+    cb(result)
+end)
+
+QBCore.Functions.CreateCallback('CL-PoliceGarageV2:GetParkingVehicle', function(source, cb, parking)
+    local parkedVehicles = {}
+    for k, v in pairs(parking) do
+        table.insert(parkedVehicles, {id = k, vehicle = v.vehicle})
+        MySQL.Async.execute('UPDATE cl_jobsgarage SET status = @status WHERE id = @id AND status = 3', {["@status"] = 1, ["@id"] = k})
+    end
+    cb(parkedVehicles)
 end)
 
 QBCore.Functions.CreateCallback('CL-PoliceGarageV2:GetVehicleCoords', function(source, cb, plate)
