@@ -241,8 +241,10 @@ RegisterServerEvent('CL-PoliceGarageV2:RentVehicle', function(paymenttype, final
     if Player.Functions.GetMoney(paymenttype) >= finalPrice then
         TriggerClientEvent("CL-PoliceGarageV2:SpawnRentedVehicle", src, vehicle, vehiclename, finalPrice, time, os.time(), coordsinfo['VehicleSpawn'], paymenttype, job, gang, station)  
         Player.Functions.RemoveMoney(paymenttype, finalPrice)
-        TriggerClientEvent('QBCore:Notify', src, vehiclename .. Config.Locals["Notifications"]['RentNotifications']["SuccessfullyRented"] .. time .. " minutes", "success")  
-        if Config.UseLogs then TriggerEvent("qb-log:server:CreateLog", "default", GetCurrentResourceName(), "blue", 'New vehicle rented by: **'..GetPlayerName(src)..'** Player ID: **' ..src.. '** Rented: **' ..vehiclename.. '** For: **' ..finalPrice.. '$**'..' Rented for: **'..time .. '** minutes', false) end
+        TriggerClientEvent('QBCore:Notify', src, vehiclename .. Config.Locals["Notifications"]['RentNotifications']["SuccessfullyRented"] .. time .. " minutes", "success")
+        if Config.UseLogs then 
+            TriggerEvent("qb-log:server:CreateLog", "default", GetCurrentResourceName(), "blue", "- Player Name: **" .. GetPlayerName(src) .. "**\n- Player ID: **" .. src .. "**\n- Vehicle Rented: **" .. vehiclename .. "**\n- Price: **" .. finalPrice .. "$**\n- Time: **" .. time .. "**", false) 
+        end
     else
         TriggerClientEvent('QBCore:Notify', src, Config.Locals["Notifications"]['GeneralNotifications']["NoMoney"], "error")              
     end    
@@ -275,8 +277,10 @@ RegisterServerEvent('CL-PoliceGarageV2:BuyVehicle', function(data)
         if Player.Functions.GetMoney(data.paymenttype) >= data.price then
             TriggerClientEvent("CL-PoliceGarageV2:SpawnPurchasedVehicle", src, data.vehicle, data.vehiclename, data.coordsinfo['VehicleSpawn'], data.coordsinfo['CheckRadius'], data.job, data.gang, data.useownable, data.trunkitems, data.extras, data.liveries, data.colors, data.station)  
             Player.Functions.RemoveMoney(data.paymenttype, data.price)
-            TriggerClientEvent('QBCore:Notify', src, data.vehiclename .. Config.Locals["Notifications"]['GeneralNotifications']["SuccessfullyBought"] .. data.station .. " garage", "success")  
-            if Config.UseLogs then TriggerEvent("qb-log:server:CreateLog", "default", GetCurrentResourceName(), "blue", 'New vehicle purchased by: **'..GetPlayerName(src)..'** Player ID: **' ..src.. '** Bought: **' ..data.vehiclename.. '** For: **' ..data.price.. '$**'..' Station rented at: **'..data.station..'**', false) end
+            TriggerClientEvent('QBCore:Notify', src, data.vehiclename .. Config.Locals["Notifications"]['GeneralNotifications']["SuccessfullyBought"] .. data.station .. " garage", "success")
+            if Config.UseLogs then 
+                TriggerEvent("qb-log:server:CreateLog", "default", GetCurrentResourceName(), "blue", "- Player Name: **" .. GetPlayerName(src) .. "**\n- Player ID: **" .. src .. "**\n- Vehicle Bought: **" .. data.vehiclename .. "**\n- Price: **" .. data.price .. "$**\n- Station: **" .. data.station .. "**", false) 
+            end        
         else
             TriggerClientEvent('QBCore:Notify', src, Config.Locals["Notifications"]['GeneralNotifications']["NoMoney"], "error")              
         end  

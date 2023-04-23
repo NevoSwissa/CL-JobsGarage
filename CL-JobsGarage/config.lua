@@ -2,7 +2,7 @@ Config = {}
 
 Config.VisuallyDamageCars = true -- Set this to false if you dont want cars to have visual damage
 
-Config.UseLogs = false -- Set to true to enable Discord logs using the default QBCore logs system. Make sure to set at qb-smallresources > server > logs.lua > Webhooks
+Config.UseLogs = true -- Set to true to enable Discord logs using the default QBCore logs system. Make sure to set at qb-smallresources > server > logs.lua > Webhooks
 
 Config.BanWhenExploit = false -- Set to true to ban players/cheaters (a safety feature).
 
