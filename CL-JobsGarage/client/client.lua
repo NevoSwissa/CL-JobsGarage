@@ -1102,7 +1102,7 @@ RegisterNetEvent('CL-PoliceGarageV2:TakeVehicle', function(data)
                         SetVehicleNumberPlateText(veh, data.vehicleinfo['plate'])
                         ApplyVehicleDamage(veh, data.vehicleinfo['engine'], data.vehicleinfo['body'])
                         SetVehRadioStation(veh, 'OFF')
-                        if Config.VehicleKeys == "default" then TriggerEvent("vehiclekeys:client:SetOwner", data.vehicleinfo['plate']) elseif Config.VehicleKeys == "qb-vehiclekeys" then TriggerServerEvent('qb-vehiclekeys:server:BuyVehicle', data.vehicleinfo['plate'], data.vehiclename) end
+                        TriggerEvent("vehiclekeys:client:SetOwner", QBCore.Functions.GetPlate(veh))
                         if data.trunkitems ~= nil then TriggerServerEvent("inventory:server:addTrunkItems", data.vehicleinfo['plate'], SetTrunkItemsInfo(data.trunkitems)) end
                         QBCore.Functions.SetVehicleProperties(veh, result.mods)
                         exports[Config.FuelSystem]:SetFuel(veh, tonumber(data.vehicleinfo['fuel'] + 0.0))
@@ -1127,7 +1127,7 @@ RegisterNetEvent('CL-PoliceGarageV2:TakeVehicle', function(data)
                         SetVehicleNumberPlateText(veh, data.vehicleinfo['plate'])
                         ApplyVehicleDamage(veh, data.vehicleinfo['engine'], data.vehicleinfo['body'])
                         SetVehRadioStation(veh, 'OFF')
-                        if Config.VehicleKeys == "default" then TriggerEvent("vehiclekeys:client:SetOwner", data.vehicleinfo['plate']) elseif Config.VehicleKeys == "qb-vehiclekeys" then TriggerServerEvent('qb-vehiclekeys:server:BuyVehicle', data.vehicleinfo['plate'], data.vehiclename) end
+                        TriggerEvent("vehiclekeys:client:SetOwner", QBCore.Functions.GetPlate(veh))
                         if data.trunkitems ~= nil then TriggerServerEvent("inventory:server:addTrunkItems", data.vehicleinfo['plate'], SetTrunkItemsInfo(data.trunkitems)) end
                         QBCore.Functions.SetVehicleProperties(veh, result.mods)
                         exports[Config.FuelSystem]:SetFuel(veh, tonumber(data.vehicleinfo['fuel'] + 0.0))
@@ -1202,7 +1202,7 @@ RegisterNetEvent("CL-PoliceGarageV2:SpawnRentedVehicle", function(vehicle, vehic
 		PlayerRentedVehicle[player] = {vehicle = veh, station = station, name = vehiclename, amount = amount, paymenttype = paymenttype, time = time, starttime = realtime, job = job, gang = gang}
         SetVehicleNumberPlateText(veh, FormatString(station)..tostring(math.random(1000, 9999)))
         exports[Config.FuelSystem]:SetFuel(veh, 100.0)
-        if Config.VehicleKeys == "default" then TriggerEvent("vehiclekeys:client:SetOwner", QBCore.Functions.GetPlate(veh)) elseif Config.VehicleKeys == "qb-vehiclekeys" then TriggerServerEvent('qb-vehiclekeys:server:GiveTempKey', QBCore.Functions.GetPlate(veh)) end
+        TriggerEvent("vehiclekeys:client:SetOwner", QBCore.Functions.GetPlate(veh))
         SetVehicleEngineOn(veh, true, true)
         StartLoop(veh, vehiclename, time, player, station)
     end, spawncoords, true, true)
@@ -1215,7 +1215,7 @@ RegisterNetEvent("CL-PoliceGarageV2:SpawnPurchasedVehicle", function(vehicle, ve
         TaskWarpPedIntoVehicle(PlayerPedId(), veh, -1)
         SetVehicleModKit(veh, 0)
         SetVehicleDirtLevel(veh, 0.0)
-        if Config.VehicleKeys == "default" then TriggerEvent("vehiclekeys:client:SetOwner", QBCore.Functions.GetPlate(veh)) elseif Config.VehicleKeys == "qb-vehiclekeys" then TriggerServerEvent('qb-vehiclekeys:server:BuyVehicle', QBCore.Functions.GetPlate(veh), vehiclename) end
+        TriggerEvent("vehiclekeys:client:SetOwner", QBCore.Functions.GetPlate(veh))
         SetVehicleEngineOn(veh, true, true)
         local totalFuel = exports[Config.FuelSystem]:GetFuel(veh)
         if trunkitems then

@@ -10,8 +10,6 @@ Config.ShowMarker = true -- Set to false to disable markers which indicates avai
 
 Config.DepotFine = 100 -- The amount of money the player needs to pay for depot. Set to nil to disable.
 
-Config.VehicleKeys = "default" -- The vehicle keys resource, if you are using the qb-vehiclekeys by sna use : Config.VehicleKeys = "qb-vehiclekeys"
-
 Config.AutoRespawn = false -- Set to true to enable automatic respawn for all vehicles at available vehicles. If set to false, the script checks for missing vehicles to put in the vehicle depot.
 
 Config.CompanyFunds = {
@@ -84,7 +82,7 @@ Config.Locations = { -- Contains information about the stations/garages availabl
             UseTarget = true, -- Set to false to disable the use of target. If set to false UseMarker must be on
             UseMarker = false, -- Set to true to enable the use of GTA V markers
             UseBlip = true, -- Set to false to disable blips for this garage
-            UsePolyZone = false, -- Set to false to not use the polyzone system. Cant be used if UseMarker only with UseTarget
+            UsePolyZone = true, -- Set to false to not use the polyzone system. Cant be used if UseMarker only with UseTarget
             UseOwnable = true, -- Set to false to disable ownable vehicles (If set to true vehicles can be stored inside the script garage system)
             UseExtras = true, -- Set to false to disable the extras feature
             UseLiveries = true, -- Set to false to disable the livery feature
@@ -190,12 +188,12 @@ Config.Locations = { -- Contains information about the stations/garages availabl
                 },
             },  
         },
-        ["EMS"] = { -- Used for the station name. This is a partial template, inculdes all the available script features. 
+        ["EMS"] = { -- Used for the station name. This is a partial template.
             UseRent = false, 
             UseTarget = true, 
             UseMarker = false, 
             UseBlip = true, 
-            UsePolyZone = false,
+            UsePolyZone = true,
             UseOwnable = true, 
             UseExtras = false, 
             UseLiveries = false,
@@ -462,7 +460,7 @@ Config.Locations = { -- Contains information about the stations/garages availabl
                         Rank = 1, -- The rank required to purchase this vehicle. Set to 0 to enable all ranks
                         VehicleSettings = { -- Everthing inside those brackets is totally optional
                             DefaultColors = { -- Default vehicle colors of which the vehicle would get spawned with
-                                 PrimaryColor = { R = 87, G = 158, B = 218 }, -- Primary color, R = red, G = green, B = blue. https://g.co/kgs/Mw5Cvr
+                                PrimaryColor = { R = 87, G = 158, B = 218 }, -- Primary color, R = red, G = green, B = blue. https://g.co/kgs/Mw5Cvr
                                 SecondaryColor = { R = 87, G = 158, B = 218 }, -- Secondary color, R = red, G = green, B = blue. https://g.co/kgs/Mw5Cvr
                             }
                         },

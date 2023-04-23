@@ -276,7 +276,7 @@ RegisterServerEvent('CL-PoliceGarageV2:BuyVehicle', function(data)
             TriggerClientEvent("CL-PoliceGarageV2:SpawnPurchasedVehicle", src, data.vehicle, data.vehiclename, data.coordsinfo['VehicleSpawn'], data.coordsinfo['CheckRadius'], data.job, data.gang, data.useownable, data.trunkitems, data.extras, data.liveries, data.colors, data.station)  
             Player.Functions.RemoveMoney(data.paymenttype, data.price)
             TriggerClientEvent('QBCore:Notify', src, data.vehiclename .. Config.Locals["Notifications"]['GeneralNotifications']["SuccessfullyBought"] .. data.station .. " garage", "success")  
-            if Config.UseLogs then TriggerEvent("qb-log:server:CreateLog", "default", GetCurrentResourceName(), "blue", 'New vehicle purchased by: **'..GetPlayerName(src)..'** Player ID: **' ..src.. '** Bought: **' ..vehiclename.. '** For: **' ..price.. '$**'..' Station rented at: **'..station..'**', false) end
+            if Config.UseLogs then TriggerEvent("qb-log:server:CreateLog", "default", GetCurrentResourceName(), "blue", 'New vehicle purchased by: **'..GetPlayerName(src)..'** Player ID: **' ..src.. '** Bought: **' ..data.vehiclename.. '** For: **' ..data.price.. '$**'..' Station rented at: **'..data.station..'**', false) end
         else
             TriggerClientEvent('QBCore:Notify', src, Config.Locals["Notifications"]['GeneralNotifications']["NoMoney"], "error")              
         end  
